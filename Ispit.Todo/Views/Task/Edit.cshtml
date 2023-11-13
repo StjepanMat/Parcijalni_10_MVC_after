@@ -13,11 +13,7 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="TodolistId" class="control-label"></label>
-                <select asp-for="TodolistId" class="form-control" asp-items="ViewBag.TodolistId"></select>
-                <span asp-validation-for="TodolistId" class="text-danger"></span>
-            </div>
+            <input type="hidden" asp-for="TodolistId" />
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
                 <input asp-for="Title" class="form-control" />
@@ -41,7 +37,7 @@
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index" asp-route-id="@Model.TodolistId">Back to List</a>
 </div>
 
 @section Scripts {

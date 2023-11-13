@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Ispit.Todo.Data;
 using Ispit.Todo.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace Ispit.Todo.Controllers
 {
@@ -15,10 +16,12 @@ namespace Ispit.Todo.Controllers
     public class TaskController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TaskController(ApplicationDbContext context)
+        public TaskController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Task
@@ -28,10 +31,17 @@ namespace Ispit.Todo.Controllers
             {
                 return RedirectToAction("Index", "Todolist");
             }
+            var list=await _context.Todolists.FindAsync(id);
+            if (list == null)
+            {
+                return RedirectToAction("Index", "Todolist");
+            }
+            if (list.UserId != _userManager.GetUserId(User))
+            {
+                return RedirectToAction("Index", "Todolist");
+            }
             var data=await _context.Tasks.Where(t=>t.TodolistId==id).ToListAsync();
-              return _context.Tasks != null ? 
-                          View(await _context.Tasks.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Tasks'  is null.");
+            return View(data);
         }
 
         // GET: Task/Details/5
@@ -53,9 +63,21 @@ namespace Ispit.Todo.Controllers
         }
 
         // GET: Task/Create
-        public IActionResult Create()
+        public IActionResult Create(int id)
         {
-            return View();
+            var list = _context.Todolists.Find(id);
+            if (list == null)
+            {
+                return RedirectToAction("Index", "Todolist");
+            }
+            if (list.UserId != _userManager.GetUserId(User))
+            {
+                return RedirectToAction("Index", "Todolist");
+            }
+            Models.Task task = new Models.Task();
+            task.Id = 0;
+            task.TodolistId = id;
+            return View(task);
         }
 
         // POST: Task/Create
@@ -67,9 +89,15 @@ namespace Ispit.Todo.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(task);
+
+                _context.Tasks.Add(new Models.Task
+                {
+                    TodolistId = task.TodolistId,
+                    Title = task.Title,
+                    Description = task.Description
+                });
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new {id=task.TodolistId});
             }
             return View(task);
         }

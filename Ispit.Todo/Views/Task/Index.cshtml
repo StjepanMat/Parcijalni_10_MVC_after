@@ -10,7 +10,7 @@
     <a asp-action="Index" asp-controller="Todolist">Back to Todo list</a>
 </p>
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" asp-route-id="@ViewContext.RouteData.Values["id"]">Create New</a>
 </p>
 <table class="table">
     <thead>

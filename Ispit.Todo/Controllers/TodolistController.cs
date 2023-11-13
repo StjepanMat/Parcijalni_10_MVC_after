@@ -30,6 +30,10 @@ namespace Ispit.Todo.Controllers
         public async Task<IActionResult> Index()
         {
             var data = await _context.Todolists.Where(l => l.UserId == _userManager.GetUserId(User)).ToListAsync();
+            foreach(var item in data)
+            {
+                item.Tasks = await _context.Tasks.Where(t=>t.TodolistId == item.Id && t.Status!= true).ToListAsync();
+            }
             return View(data);
         }
 
