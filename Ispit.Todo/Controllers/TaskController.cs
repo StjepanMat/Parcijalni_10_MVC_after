@@ -22,8 +22,13 @@ namespace Ispit.Todo.Controllers
         }
 
         // GET: Task
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? id)
         {
+            if(id== null || _context.Tasks == null)
+            {
+                return RedirectToAction("Index", "Todolist");
+            }
+            var data=await _context.Tasks.Where(t=>t.TodolistId==id).ToListAsync();
               return _context.Tasks != null ? 
                           View(await _context.Tasks.ToListAsync()) :
                           Problem("Entity set 'ApplicationDbContext.Tasks'  is null.");

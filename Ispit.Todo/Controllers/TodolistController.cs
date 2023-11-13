@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Ispit.Todo.Data;
 using Ispit.Todo.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace Ispit.Todo.Controllers
 {
@@ -15,18 +17,20 @@ namespace Ispit.Todo.Controllers
     public class TodolistController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TodolistController(ApplicationDbContext context)
+        public TodolistController(ApplicationDbContext context,
+                                  UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Todolist
         public async Task<IActionResult> Index()
         {
-              return _context.Todolists != null ? 
-                          View(await _context.Todolists.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Todolists'  is null.");
+            var data = await _context.Todolists.Where(l => l.UserId == _userManager.GetUserId(User)).ToListAsync();
+            return View(data);
         }
 
         // GET: Todolist/Details/5
@@ -50,7 +54,9 @@ namespace Ispit.Todo.Controllers
         // GET: Todolist/Create
         public IActionResult Create()
         {
-            return View();
+            Todolist list = new Todolist();
+            list.UserId = _userManager.GetUserId(User);
+            return View(list);
         }
 
         // POST: Todolist/Create
@@ -60,6 +66,7 @@ namespace Ispit.Todo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,UserId,Description")] Todolist todolist)
         {
+            ModelState.Remove("Tasks");
             if (ModelState.IsValid)
             {
                 _context.Add(todolist);
